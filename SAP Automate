@@ -2,10 +2,10 @@ Option Explicit
 Public SapGuiAuto, WScript, msgcol
 Public objGui As GuiApplication
 Public objConn As GuiConnection
-'Public objSBar As GuiStatusbar
+Public objSBar As GuiStatusbar
 Public session As GuiSession
 
-Sub SAP_Multiple_Values()
+Sub Nettowert_from_SAP()
 
     ' Initialize SAP connection
     Set SapGuiAuto = GetObject("SAPGUI")
@@ -20,8 +20,8 @@ Sub SAP_Multiple_Values()
     Dim i As Long
 
     Set ws = ThisWorkbook.Sheets("Tabelle1")
-    'Set objSBar = session.FindById("wnd[0]/sbar")
-    'If objSBar.Text = "" Then.....if incase you want get the text from status bar
+    Set objSBar = session.FindById("wnd[0]/sbar")
+    
 
 
     ' Find last row in column A
@@ -42,6 +42,11 @@ Sub SAP_Multiple_Values()
             session.FindById("wnd[0]/usr/ctxtS_VBELN-LOW").Text = Lieferungsnummer
             session.FindById("wnd[0]/usr/chkP_KEINWA").SetFocus
             session.FindById("wnd[0]/tbar[1]/btn[8]").Press
+            If objSBar.Text = "Keine Lieferungen zu den eingegebenen Auswahlkriterien gefunden!" Then
+                ws.Cells(i, 2).Value = "-"
+                session.FindById("wnd[0]/tbar[0]/btn[15]").Press
+                GoTo handler
+            End If
             session.FindById("wnd[0]/usr/lbl[19,1]").SetFocus
             session.FindById("wnd[0]/usr/lbl[19,1]").CaretPosition = 1
             session.FindById("wnd[0]").SendVKey 2
@@ -53,13 +58,13 @@ Sub SAP_Multiple_Values()
             session.FindById("wnd[0]/tbar[1]/btn[8]").Press
 
             ' Handle possible error
-            On Error Resume Next
+            On Error Resume Next ' This deactivates the error handler and executes the GoTo which otherewise would have been an error
             session.FindById("wnd[1]/tbar[0]/btn[0]").Press
             If Err.Number <> 0 Then
                 Err.Clear
                 GoTo Myerror
             End If
-            On Error GoTo 0
+            On Error GoTo 0 ' If there was no error, the handler is reactivated for error handling the further code
 
             ' Retrieve value from SAP
             session.FindById("wnd[0]/usr/subSUBSCREEN_HEADER:SAPMV45A:4021/txtRV45A-ZZORDVAL").SetFocus
@@ -80,11 +85,9 @@ Myerror:
         session.FindById("wnd[0]/tbar[0]/btn[15]").Press
         session.FindById("wnd[0]/tbar[0]/btn[15]").Press
         session.FindById("wnd[0]/tbar[0]/btn[15]").Press
+handler:
     Next i
 
     
-
-
-
 End Sub
 
