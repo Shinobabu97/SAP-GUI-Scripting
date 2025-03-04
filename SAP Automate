@@ -2,10 +2,10 @@ Option Explicit
 Public SapGuiAuto, WScript, msgcol
 Public objGui  As GuiApplication
 Public objConn As GuiConnection
-Public objSBar As GuiStatusbar
+'Public objSBar As GuiStatusbar
 Public session As GuiSession
 
-Sub SAP_Automate()
+Sub SAP_ohne_Fehler()
 
 Set SapGuiAuto = GetObject("SAPGUI")
 Set objGui = SapGuiAuto.GetScriptingEngine
@@ -13,15 +13,19 @@ Set objConn = objGui.Children(0)
 Set session = objConn.Children(0)
 Dim nettowert As String
 Dim ws As Object
+Dim Lieferungsnummer As String
 
 Set ws = ThisWorkbook.Sheets("Tabelle1")
-Set objSBar = session.FindById("wnd[0]/sbar")
+'Set objSBar = session.FindById("wnd[0]/sbar")
+'If objSBar.Text = "" Then.....if incase you want get the text from status bar
+
+Lieferungsnummer = ws.Range("A1").Value
 
 session.FindById("wnd[0]").Maximize
 session.FindById("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").DoubleClickNode "F00002"
 session.FindById("wnd[0]/usr/radP_INEX").Select
 session.FindById("wnd[0]/usr/chkP_KEINWA").Selected = False
-session.FindById("wnd[0]/usr/ctxtS_VBELN-LOW").Text = "8103805985"
+session.FindById("wnd[0]/usr/ctxtS_VBELN-LOW").Text = Lieferungsnummer
 session.FindById("wnd[0]/usr/chkP_KEINWA").SetFocus
 session.FindById("wnd[0]/tbar[1]/btn[8]").Press
 session.FindById("wnd[0]/usr/lbl[19,1]").SetFocus
@@ -33,16 +37,24 @@ session.FindById("wnd[0]/tbar[1]/btn[7]").Press
 session.FindById("wnd[0]/usr/shell/shellcont[1]/shell[1]").SelectItem "          1", "&Hierarchy"
 session.FindById("wnd[0]/usr/shell/shellcont[1]/shell[1]").EnsureVisibleHorizontalItem "          1", "&Hierarchy"
 session.FindById("wnd[0]/tbar[1]/btn[8]").Press
-If objSBar.Text = "" Then
-session.FindById("wnd[0]/usr/subSUBSCREEN_HEADER:SAPMV45A:4021/txtRV45A-ZZORDVAL").SetFocus
-nettowert = session.FindById("wnd[0]/usr/subSUBSCREEN_HEADER:SAPMV45A:4021/txtRV45A-ZZORDVAL").Text
-ws.Range("A1").Value = nettowert
-Else
+On Error Resume Next 'this line supresses any error coming in the future
 session.FindById("wnd[1]/tbar[0]/btn[0]").Press
+If Err.Number <> 0 Then
+    Err.Clear
+    GoTo Myerror
+End If
+On Error GoTo 0  'This line restores the error handling capabilities for further code. This part actualy ensure that only the section is error handling diabled
+
 session.FindById("wnd[0]/usr/subSUBSCREEN_HEADER:SAPMV45A:4021/txtRV45A-ZZORDVAL").SetFocus
 nettowert = session.FindById("wnd[0]/usr/subSUBSCREEN_HEADER:SAPMV45A:4021/txtRV45A-ZZORDVAL").Text
-ws.Range("A1").Value = nettowert
-End If
+ws.Range("B1").Value = nettowert
+
+
+Myerror:
+session.FindById("wnd[0]/usr/subSUBSCREEN_HEADER:SAPMV45A:4021/txtRV45A-ZZORDVAL").SetFocus
+nettowert = session.FindById("wnd[0]/usr/subSUBSCREEN_HEADER:SAPMV45A:4021/txtRV45A-ZZORDVAL").Text
+ws.Range("B1").Value = nettowert
+
 
 
 End Sub
