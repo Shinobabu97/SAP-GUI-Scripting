@@ -18,6 +18,7 @@ Sub Nettowert_from_SAP()
     Dim Lieferungsnummer As String
     Dim lastRow As Long
     Dim i As Long
+    Dim statusText As String
 
     Set ws = ThisWorkbook.Sheets("Tabelle1")
     Set objSBar = session.FindById("wnd[0]/sbar")
@@ -57,6 +58,19 @@ Sub Nettowert_from_SAP()
             session.FindById("wnd[0]/usr/shell/shellcont[1]/shell[1]").EnsureVisibleHorizontalItem "          1", "&Hierarchy"
             session.FindById("wnd[0]/tbar[1]/btn[8]").Press
 
+            'Special error case
+            statusText = objSBar.Text
+            If Left(statusText, 25) = "Keine Anzeigeberechtigung" Then
+                ws.Cells(i, 2).Value = "-"
+                session.FindById("wnd[0]/tbar[0]/btn[12]").Press
+                session.FindById("wnd[0]/tbar[0]/btn[15]").Press
+                session.FindById("wnd[0]/tbar[0]/btn[15]").Press
+                session.FindById("wnd[0]/tbar[0]/btn[15]").Press
+                session.FindById("wnd[0]/tbar[0]/btn[15]").Press
+                session.FindById("wnd[0]/tbar[0]/btn[15]").Press
+                GoTo handler
+            End If
+
             ' Handle possible error
             On Error Resume Next ' This deactivates the error handler and executes the GoTo which otherewise would have been an error
             session.FindById("wnd[1]/tbar[0]/btn[0]").Press
@@ -65,7 +79,9 @@ Sub Nettowert_from_SAP()
                 GoTo Myerror
             End If
             On Error GoTo 0 ' If there was no error, the handler is reactivated for error handling the further code
-
+            
+            
+            
             ' Retrieve value from SAP
             session.FindById("wnd[0]/usr/subSUBSCREEN_HEADER:SAPMV45A:4021/txtRV45A-ZZORDVAL").SetFocus
             nettowert = session.FindById("wnd[0]/usr/subSUBSCREEN_HEADER:SAPMV45A:4021/txtRV45A-ZZORDVAL").Text
@@ -90,4 +106,5 @@ handler:
 
     
 End Sub
+
 
