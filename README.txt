@@ -2,6 +2,8 @@
 
 'Error handler is the error message displayed by VBA
 
+Set objSBar = session.FindById("wnd[0]/sbar") 'Status bar
+
 On Error Resume Next ' This deactivates the error handler
         session.FindById("wnd[0]/usr/lbl[19,1]").SetFocus 'This is the button throwing the error
         If Err.Number <> 0 Then
